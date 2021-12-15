@@ -3,6 +3,10 @@ pragma solidity ^0.5.16;
 
 import "../owner/Ownable.sol";
 
+interface TxUserWallet {
+    function transferTo(address payable dest, uint amount) external;
+}
+
 contract funding is Ownable  {
     address public winner;                                        // 당첨자 
     address[] public participantAddress;                          // 펀딩한 사람의 주소 
@@ -82,20 +86,25 @@ contract funding is Ownable  {
         }               
     }
     
+/*
     function refund() public {
+        
         if (!isRefundingAllowed) revert();
     
-        address investor = msg.sender;
+        address payable investor = msg.sender;
         uint256 investment = participantMapper[investor];
         if (investment == 0) revert();
         participantMapper[investor] = 0;
         investmentRefunded += investment;
         emit Refund(msg.sender, investment);
+
+        // require (!investor.transfer(investment));
     
-        if (!address(uint256(investor).transfer(investment))) revert();
+        // if (!TxUserWallet(investor).transferTo(investor, investment)) revert();
     }
 
     function refund(address _participant) internal {
+        
         if (!isRefundingAllowed) revert();
     
         address investor = _participant;
@@ -104,17 +113,18 @@ contract funding is Ownable  {
         // investmentAmountOf[investor] = 0;
         investmentRefunded += investment;
         emit Refund(_participant, investment);
+
+        // require (!investor.transfer(investment));
     
-        if (!investor.send(investment)) revert();
+        // if (!investor.send(investment)) revert();
     }
-
-    function drawWinner() public {    //당첨자 추첨
+*/
+    function drawWinner() public {                     //당첨자 추첨
         require(now > endTime + 5 minutes);
-        require(winner == address(0));    //아직 당첨자 추첨이 진행되지 않은 것을 검증하기 위해 require()문으로 당첨자의 주소는 0으로 설정
+        require(winner == address(0));                 //아직 당첨자 추첨이 진행되지 않은 것을 검증하기 위해 require()문으로 당첨자의 주소는 0으로 설정
 
-        bytes32 rand = keccak256(             // 
-            block.blockhash(block.number-1)    //최근 블록 해시를 해시하여 임의의 바이트 열 생성
-        );
+        bytes32 hash = blockhash(block.number-1);    
+        bytes32 rand = keccak256(abi.encode(hash));    //최근 블록 해시를 해시하여 임의의 바이트 열 생성
 
         // 1. for문 사용 
         // 2. rend 값을 참가자 수로 나눈 나머지 값을 funding 변수 인덱스로 사용
